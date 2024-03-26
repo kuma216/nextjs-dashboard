@@ -107,21 +107,22 @@ export async function deleteInvoice(id: string) {
 
 export async function authenticate(
   prevState: string | undefined,
-  formData: FormData
+  formData: FormData,
 ) {
- try {
-  await signIn('credentials', formData)
-  
- } catch (error) {
-    console.log(error);
-    
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials'
-        default:
-          return 'something went wrong'
-      }
+  let responseRedirectUrl = null;
+  try {
+    console.log('formData', formData);
+    responseRedirectUrl = await signIn('credentials', {
+      ...Object.fromEntries(formData),
+      redirect: false,
+    });
+  } catch (error) {
+    console.log('error', error);
+    if ((error as Error).message.includes('CredentialsSignin')) {
+      return 'CredentialSignin';
     }
- }
+    throw error;
+  } finally {
+    if (responseRedirectUrl) redirect(responseRedirectUrl);
+  }
 }
